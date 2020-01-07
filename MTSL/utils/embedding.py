@@ -21,9 +21,18 @@ def load_embedding_dict(embedding_path, normalize_digits=True):
             if embedd_dim < 0:
                 embedd_dim = len(tokens) - 1
             else:
-                assert (embedd_dim + 1 == len(tokens))
-            embedd = np.empty([1, embedd_dim], dtype=np.float32)
-            embedd[:] = tokens[1:]
-            word = DIGIT_RE.sub("0", tokens[0]) if normalize_digits else tokens[0]
-            embedd_dict[word] = embedd
+                # print("embedd_dim >>>>" + str(embedd_dim))
+                # print("tokens,len >>>>>> " + str(len(tokens)))
+                # print(tokens)
+                
+                if(len(tokens)!=50):
+                    # print("tokens,len >>>>>> " + str(len(tokens)))
+                    pass    # placeholder
+                else:
+                    embedd = np.empty([1, embedd_dim], dtype=np.float32)
+                    embedd[:] = tokens[1:]
+                    word = DIGIT_RE.sub("0", tokens[0]) if normalize_digits else tokens[0]
+                    embedd_dict[word] = embedd
+                # assert (embedd_dim + 1 == len(tokens))
+
     return embedd_dict, embedd_dim
