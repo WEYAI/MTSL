@@ -24,7 +24,6 @@ def load_embedding_dict(embedding_path, normalize_digits=True):
                 # print("embedd_dim >>>>" + str(embedd_dim))
                 # print("tokens,len >>>>>> " + str(len(tokens)))
                 # print(tokens)
-                
                 if(len(tokens)!=50):
                     # print("tokens,len >>>>>> " + str(len(tokens)))
                     pass    # placeholder
