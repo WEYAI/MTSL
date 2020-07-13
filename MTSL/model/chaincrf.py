@@ -1,13 +1,14 @@
-import torch
 import torch.nn as nn
 from torch.nn.parameter import Parameter
 import utils
+import torch
 
 
 class ChainCRF(nn.Module):
     def __init__(self, input_size, num_labels, bigram=True, **kwargs):
         """
         Args:
+            
             input_size: int
                 the dimension of the input.
             num_labels: int
@@ -100,7 +101,6 @@ class ChainCRF(nn.Module):
         mask_transpose = None
         if mask is not None:
             mask_transpose = mask.unsqueeze(2).transpose(0, 1)
-
 
         # shape = [batch, num_label]
         partition = None

@@ -4,8 +4,6 @@ from chaincrf import ChainCRF
 from torch.nn import Embedding
 from allennlp.modules.elmo import Elmo
 import utils
-
-
 class RNNSharedModel(nn.Module):
     def __init__(self, word_dim, num_words, char_dim, num_chars, num_labels, num_filters,
                  kernel_size, rnn_mode, hidden_size, num_layers, embedd_word=None, p_in=0.33, p_out=0.5,
@@ -177,7 +175,7 @@ class RNNSharedModel(nn.Module):
         if self.use_lm:
             output, _, mask, length, lm_fw, lm_bw = self._get_rnn_output(input_word, input_char, mask, hx=hx)
         else:
-            output, _, mask, length,  = self._get_rnn_output(input_word, input_char, mask, hx=hx)
+            output, _, mask, length, = self._get_rnn_output(input_word, input_char, mask, hx=hx)
         max_len = length.max()
         target = target[:, :max_len]
         if main_task:
@@ -185,4 +183,3 @@ class RNNSharedModel(nn.Module):
         else:
             preds = self.crf_1.decode(output, mask=mask, leading_symbolic=leading_symbolic)
         return preds, (torch.eq(preds, target.data).float() * mask.data).sum()
-

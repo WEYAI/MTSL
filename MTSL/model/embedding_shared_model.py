@@ -70,8 +70,10 @@ class EmbeddingSharedModel(nn.Module):
             input = input['elmo_representations'][1]
         else:
             # [batch, length, word_dim]
-            word = self.word_embedd(input_word)
-            # [batch, length, char_length, char_dim]
+            # torch.Size([128, 20, 50])
+            word = self.word_embedd(input_word)  # [bach size,sentence size,embedding size]
+            #  [batch, length, char_length, char_dim]
+            #  torch.Size([128, 20, 24, 300])
             char = self.char_embedd(input_char)
             char_size = char.size()
             # first transform to [batch *length, char_length, char_dim]
@@ -181,9 +183,9 @@ class EmbeddingSharedModel(nn.Module):
         # output from rnn [batch, length, tag_space]
         if self.use_lm:
             output, _, mask, length, lm_fw, lm_bw = self._get_rnn_output(input_word, input_char, main_task,
-                                                                                 mask, hx=hx)
+                                                                         mask, hx=hx)
         else:
-            output, _, mask, length,  = self._get_rnn_output(input_word, input_char, main_task, mask, hx=hx)
+            output, _, mask, length, = self._get_rnn_output(input_word, input_char, main_task, mask, hx=hx)
         max_len = length.max()
         target = target[:, :max_len]
         if main_task:

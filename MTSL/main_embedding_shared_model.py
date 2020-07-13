@@ -1,10 +1,11 @@
-import sys, os
+import sys,os
 import torch
 import time
 import uuid
 from torch.optim import SGD
 from scipy.stats import bernoulli
 import argparse
+
 sys.path.append(os.path.dirname(os.path.realpath(__file__)) + '/utils')
 sys.path.append(os.path.dirname(os.path.realpath(__file__)) + '/model')
 import logger, embedding, io_utils, embedding_shared_model, writer
@@ -49,6 +50,39 @@ parser.add_argument('--dev', nargs=2)
 parser.add_argument('--test', nargs=2)
 
 args = parser.parse_args()
+
+args.rnn_mode = 'LSTM'
+args.num_epochs = 200
+args.batch_size = 128
+args.hidden_size = 256
+args.num_layers = 1
+args.char_dim = 300
+args.num_filters = 30
+args.learning_rate = 0.01
+args.decay_rate = 0.05
+args.schedule = 1
+args.gamma = 0.0
+args.p_in = 0.33
+args.p_rnn = [0.33, 0.5]
+args.p_out = 0.5
+args.lm_loss = 0.05
+base_path = "/home/zutnlp/data/"
+# args.embedding_path=base_path+"MTSL/MTSL/data/embedding/glove_300_embedding.txt"
+args.embedding_path = "data/embedding/glove_embedding.txt"  # this is 50 dimensions
+args.option_path = "data/embedding/elmo_option.json"
+args.weight_path = "data/embedding/elmo_weight.hdf5"
+args.word2index_path = base_path + "MTSL/MTSL/output/embedding_shared_model/chunk/word2index"
+args.out_path = base_path + "MTSL/MTSL/output/embedding_shared_model/chunk"
+args.use_crf = "True"
+args.use_lm = "False"
+args.use_elmo = "False"
+args.lm_mode = "unshared"
+args.label_type = ["chunk", "pos"]
+args.bucket_auxiliary = [5, 10, 15, 20, 25, 30, 40, 50, 60, 70, 80]
+args.bucket_main = [5, 10, 15, 20, 25, 30, 40, 50, 60, 70, 80]
+args.train = ["data/chunk/train.chunk", base_path + "conll2000_data/pos/pos_train.txt"]
+args.dev = ["data/chunk/dev.chunk", base_path + "conll2000_data/pos/pos_valid.txt"]
+args.test = ["data/chunk/test.chunk", base_path + "conll2000_data/pos/pos_test.txt"]
 
 rnn_mode = args.rnn_mode
 train_path = args.train
@@ -231,7 +265,7 @@ for epoch in range(1, num_epochs + 1):
             else:
                 _, preds = network.loss(word, char, labels, main_task, word_fw, word_bw, masks, leading_symbolic=1)
             writers[i].write(word.data.cpu().numpy(), preds.cpu().numpy(), labels.data.cpu().numpy(),
-                         lengths.cpu().numpy(), use_elmo)
+                             lengths.cpu().numpy(), use_elmo)
         writers[i].close()
         acc, precision, recall, f1 = io_utils.evaluate_f1(tmp_filename, out_path, uid)
         acc_list.append(acc)
