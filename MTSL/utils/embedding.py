@@ -1,6 +1,7 @@
 import numpy as np
 import codecs
 from constant import DIGIT_RE
+from itertools import islice
 
 
 def load_embedding_dict(embedding_path, normalize_digits=True):
@@ -13,7 +14,8 @@ def load_embedding_dict(embedding_path, normalize_digits=True):
     embedd_dim = -1
     embedd_dict = dict()
     with codecs.open(embedding_path, 'r', 'utf-8') as f:
-        for line in f:
+        for line in islice(f, 1, None):  # skip the firs line
+            # for line in f:
             line = line.strip()
             if len(line) == 0:
                 continue
@@ -21,17 +23,13 @@ def load_embedding_dict(embedding_path, normalize_digits=True):
             if embedd_dim < 0:
                 embedd_dim = len(tokens) - 1
             else:
-                # print("embedd_dim >>>>" + str(embedd_dim))
-                # print("tokens,len >>>>>> " + str(len(tokens)))
-                # print(tokens)
-                if(len(tokens)!=50):
-                    # print("tokens,len >>>>>> " + str(len(tokens)))
-                    pass    # placeholder
-                else:
-                    embedd = np.empty([1, embedd_dim], dtype=np.float32)
-                    embedd[:] = tokens[1:]
-                    word = DIGIT_RE.sub("0", tokens[0]) if normalize_digits else tokens[0]
-                    embedd_dict[word] = embedd
-                # assert (embedd_dim + 1 == len(tokens))
-
+                # if(embedd_dim)
+                if embedd_dim + 1 != len(tokens):
+                    continue
+                assert (embedd_dim + 1 == len(tokens))
+            embedd = np.empty([1, embedd_dim], dtype=np.float32)
+            # print(tokens[0])
+            embedd[:] = tokens[1:]
+            word = DIGIT_RE.sub("0", tokens[0]) if normalize_digits else tokens[0]
+            embedd_dict[word] = embedd
     return embedd_dict, embedd_dim

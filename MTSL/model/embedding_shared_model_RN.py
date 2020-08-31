@@ -4,14 +4,17 @@ from chaincrf import ChainCRF
 from torch.nn import Embedding
 from allennlp.modules.elmo import Elmo
 import utils
+from relation_network import FuseRelationNetwork
+
+DEVICE = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
 
-class EmbeddingSharedModel(nn.Module):
+class EmbeddingSharedRN(nn.Module):
     def __init__(self, word_dim, num_words, char_dim, num_chars, num_labels, num_filters,
                  kernel_size, rnn_mode, hidden_size, num_layers, embedd_word=None, p_in=0.33, p_out=0.5,
                  p_rnn=(0.5, 0.5), lm_loss=0.05, bigram=True, use_crf=True, use_lm=True, use_elmo=False,
                  lm_mode='unshared'):
-        super(EmbeddingSharedModel, self).__init__()
+        super(EmbeddingSharedRN, self).__init__()
         self.lm_loss = lm_loss
         self.use_elmo = use_elmo
         self.lm_mode = lm_mode
@@ -61,6 +64,12 @@ class EmbeddingSharedModel(nn.Module):
                 self.dense_bw = nn.Linear(hidden_size, num_words)
         self.logsoftmax = nn.LogSoftmax(dim=1)
         self.nll_loss = nn.NLLLoss(size_average=False, reduce=False)
+        self.key_dim = 64
+        self.val_dim = 64
+        self.attn_dropout = 0.3
+        self.hidden_dim = 512
+        self.num_heads = 1
+        self.RN = FuseRelationNetwork(hidden_size * 2)
 
     def _get_rnn_output(self, input_word, input_char, main_task, mask, hx=None):
         length = mask.data.sum(dim=1).long()
@@ -94,27 +103,29 @@ class EmbeddingSharedModel(nn.Module):
         # prepare packed_sequence
         seq_input, hx, rev_order, mask, _ = utils.prepare_rnn_seq(input, length, hx=hx, masks=mask, batch_first=True)
         if main_task:
-            seq_output, hn = self.rnn_2(seq_input, hx=hx)
+            seq_output, (hn, _) = self.rnn_2(seq_input, hx=hx)
         else:
-            seq_output, hn = self.rnn_1(seq_input, hx=hx)
-        output, hn = utils.recover_rnn_seq(seq_output, rev_order, hx=hn, batch_first=True)
-        output = self.dropout_out(output)
-
-        pass
+            seq_output, (hn, _) = self.rnn_1(seq_input, hx=hx)
+        lstm_out, _ = utils.recover_rnn_seq(seq_output, rev_order, hx=hn, batch_first=True)
+        lstm_out = self.dropout_out(lstm_out)
+        r = self.RN(hn, lstm_out)
+        # attn_out, _ = self.soft_attention(lstm_out, lstm_out)
+        # attn_out = 0.9 * lstm_out + 0.1 * attn_out
         if self.use_lm:
-            output_size = output.size()
+            output_size = r.size()
             # print output_size
-            lm = output.view(output_size[0], output_size[1], 2, -1)
+            lm = r.view(output_size[0], output_size[1], 2, -1)
             # print output_lm.size()
             lm_fw = lm[:, :, 0]
             lm_bw = lm[:, :, 1]
-            return output, hn, mask, length, lm_fw, lm_bw
+            return r, hn, mask, length, lm_fw, lm_bw
         else:
-            return output, hn, mask, length
+            return r, hn, mask, length
 
     def forward(self, input_word, input_char, main_task, mask, hx=None):
         # output from rnn [batch, length, tag_space]
         output, _, mask, length = self._get_rnn_output(input_word, input_char, main_task, mask, hx=hx)
+
         # [batch, length, num_label,  num_label]
         return self.crf(output, mask=mask), mask
 

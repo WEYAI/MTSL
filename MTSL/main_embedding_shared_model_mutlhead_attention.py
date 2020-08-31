@@ -5,10 +5,12 @@ import uuid
 from torch.optim import SGD
 from scipy.stats import bernoulli
 import argparse
+
 sys.path.append(os.path.dirname(os.path.realpath(__file__)) + '/utils')
 sys.path.append(os.path.dirname(os.path.realpath(__file__)) + '/model')
-import logger, embedding, io_utils, embedding_shared_model, writer
+import logger, embedding, io_utils, writer
 import warnings
+from embedding_shared_model_self_attention import EmbeddingSharedModelAttention
 
 warnings.filterwarnings("ignore")
 uid = uuid.uuid4().hex[:6]
@@ -171,7 +173,7 @@ else:
     word_table = io_utils.construct_word_embedding_table(embedd_dict, embedd_dim, word_word2index)
 
 logger.info("constructing network...")
-network = embedding_shared_model.EmbeddingSharedModel(
+network = EmbeddingSharedModelAttention(
     embedd_dim, word_word2index.size(), char_dim, char_word2index.size(), num_labels, num_filters, window, rnn_mode,
     hidden_size, num_layers, embedd_word=word_table, p_in=p_in, p_out=p_out, p_rnn=p_rnn, lm_loss=lm_loss,
     bigram=bigram, use_crf=use_crf, use_elmo=use_elmo, use_lm=use_lm, lm_mode=lm_mode)
