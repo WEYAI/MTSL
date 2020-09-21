@@ -108,6 +108,8 @@ class EmbeddingSharedRN(nn.Module):
             seq_output, (hn, _) = self.rnn_1(seq_input, hx=hx)
         lstm_out, _ = utils.recover_rnn_seq(seq_output, rev_order, hx=hn, batch_first=True)
         lstm_out = self.dropout_out(lstm_out)
+        if hasattr(torch.cuda, 'empty_cache'):
+            torch.cuda.empty_cache()
         r = self.RN(hn, lstm_out)
         # attn_out, _ = self.soft_attention(lstm_out, lstm_out)
         # attn_out = 0.9 * lstm_out + 0.1 * attn_out
