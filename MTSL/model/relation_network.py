@@ -22,7 +22,11 @@ class FusionNetwork(nn.Module):
         b_ext = input.unsqueeze(1).expand(-1, input.size(1), -1, -1)  # [3, 4, 4, 400]
         h_ext = hidden.unsqueeze(1).unsqueeze(2).expand(-1, input.size(1), input.size(1), -1)  # [3, 4, 4, 400]
         fused = None
+        if hasattr(torch.cuda, 'empty_cache'):
+            torch.cuda.empty_cache()
         if 'cat' in self._fuse_method:
+            if hasattr(torch.cuda, 'empty_cache'):
+                torch.cuda.empty_cache()
             fused = torch.cat([a_ext, b_ext, h_ext], dim=-1).mean(2)
         elif 'add' in self._fuse_method:
             fused = torch.add(torch.add(a_ext, b_ext), h_ext).mean(2)

@@ -26,6 +26,7 @@ parser.add_argument('--window', type=int, default=30, help='Window size for CNN'
 parser.add_argument('--char_dim', type=int, default=30, help='Dimension of Character embeddings')
 parser.add_argument('--learning_rate', type=float, default=0.01, help='Learning rate')
 parser.add_argument('--decay_rate', type=float, default=0.05, help='Decay rate of learning rate')
+
 parser.add_argument('--momentum', type=float, default=0.9, help='Momentum for SGD')
 parser.add_argument('--gamma', type=float, default=0.0, help='weight for regularization')
 parser.add_argument('--p_rnn', nargs=2, type=float, help='dropout rate for RNN')
@@ -199,8 +200,7 @@ test_recall = 0.0
 best_epoch = 0
 lr = learning_rate
 for epoch in range(1, num_epochs + 1):
-    print('Epoch %d (%s, learning rate=%.4f, decay rate=%.4f (schedule=%d)): ' % (
-        epoch, rnn_mode, lr, decay_rate, schedule))
+    print('Epoch %d (%s, learning rate=%.4f, decay rate=%.4f (schedule=%d)): ' % (epoch, rnn_mode, lr, decay_rate, schedule))
     start_time = time.time()
     train_err = 0.
     train_total = 0.
@@ -223,6 +223,8 @@ for epoch in range(1, num_epochs + 1):
             word_fw = None
             word_bw = None
         optim.zero_grad()
+        if hasattr(torch.cuda, 'empty_cache'):
+            torch.cuda.empty_cache()
         if use_crf:
             loss = network.loss(word, char, labels, main_task, word_fw, word_bw, masks, leading_symbolic=1)
         else:
@@ -265,6 +267,8 @@ for epoch in range(1, num_epochs + 1):
                 word_bw = None
             if use_crf:
                 preds, _ = network.decode(word, char, labels, main_task, masks, leading_symbolic=1)
+                # decoding results in shape[batch, length]
+                pass
             else:
                 _, preds = network.loss(word, char, labels, main_task, word_fw, word_bw, masks, leading_symbolic=1)
             writers[i].write(word.data.cpu().numpy(), preds.cpu().numpy(), labels.data.cpu().numpy(),
@@ -275,8 +279,8 @@ for epoch in range(1, num_epochs + 1):
         precision_list.append(precision)
         recall_list.append(recall)
         f1_list.append(f1)
-        print(label_type[i] + ' dev acc: %.2f%%, precision: %.2f%%, recall: %.2f%%, F1: %.2f%%' % (acc, precision,
-                                                                                                   recall, f1))
+        print(label_type[i] + ' dev acc: %.2f%%, precision: %.2f%%, recall: %.2f%%, F1: %.2f%%' % (
+        acc, precision, recall, f1))
 
     if dev_f1 < f1_list[-1]:
         dev_f1 = f1_list[-1]
