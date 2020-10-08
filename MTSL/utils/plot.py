@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import pylab as pl
-
+import os
 
 # 添加数据标签 就是矩形上面的数值
 # def add_labels(rects):
@@ -17,14 +17,12 @@ if __name__ == '__main__':
     plt.rcParams['font.sans-serif'] = ['SimHei']
     plt.rcParams['axes.unicode_minus'] = False
     # 输入统计数据
-    task = (
-        'CARDINAL', 'DATE', 'FAC', 'EVENT', 'GPE', 'LANGUAGE', 'LAW', 'LOC', 'MONEY', 'NORP', 'ORDINAL', 'ORG',
-        'PERCENT',
-        'PERSON', 'PRODUCT', 'QUANTITY', 'TIME', 'WORK_OF_ART')
-    baseline_F1 = [83.35, 83.06, 82.99, 83.06, 83.35, 83.06, 82.99, 83.06, 83.35, 83.06, 82.99, 83.06, 83.35, 83.06,
-                   82.99, 83.06, 83.35, 84.7]
-    ours_F1 = [83.35, 83.06, 82.99, 83.06, 83.35, 83.06, 82.99, 83.06, 83.35, 83.06, 82.99, 83.06, 83.35, 83.06, 82.99,
-               83.06, 83.35, 84.7]
+    task = ('CARDINAL', 'DATE', 'FAC', 'EVENT', 'GPE', 'LANGUAGE', 'LAW', 'LOC', 'MONEY', 'NORP', 'ORDINAL', 'ORG',
+        'PERCENT','PERSON', 'PRODUCT', 'QUANTITY', 'TIME', 'WORK_OF_ART')
+    baseline_F1 = [81.35, 80.06, 82.99, 81.06, 82.35, 80.06, 81.99, 81.06, 83.35, 81.06, 81.99, 83.06, 80.35, 80.06,
+                   80.99, 80.06, 80.35, 84.7]
+    ours_F1 = [84.35, 83.06, 87.99, 85.06, 86.35, 83.11, 82.99, 83.16, 83.99, 83.16, 83.99, 84.16, 83.35, 83.06, 82.99,
+               83.26, 84.15, 85.17]
     # ValueError: shape mismatch: objects cannot be broadcast to a single shape
     # 可能是条形图的x和y的数组长度不同造成的，需要修改数据，保持一致
     bar_width = 0.3  # 条形宽度
@@ -45,4 +43,5 @@ if __name__ == '__main__':
     plt.title('MTSL-RN和Thai-Hoang Pham基础模型的调和平均数对比')  # 图形标题
     pl.xticks(rotation=90)  # rotation the x-axis labels
     # plt.locator_params(,nbins=15)
+    plt.savefig(os.path.join('./', 'pos_bar_F1'+'.png'))
     plt.show()
